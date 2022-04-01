@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Front-end</title>
+</head>
+<body>
+<h1>Front-end</h1>
+
+
+<button id="create_video">create</button>
+<input id="create_title" placeholder="новое название"/>
+<hr>
+<button id="read_all_videos">read all vieos</button>
+<hr>
+<button id="read_single_video">read video by id</button>
+<input id="read_id" placeholder="videoId"/>
+<hr>
+<button id="update_video">update</button>
+<input id="update_id" placeholder="videoId"/><input id="update_title" placeholder="новое название"/>
+<hr>
+<button id="delete_video">delete</button>
+<input id="delete_id" placeholder="videoId"/>
+<hr>
+
+
+<div id="result"></div>
+<script>
+    read_all_videos.onclick = () => {
+        fetch('http://localhost:5005/videos')
+            .then(res => res.json())
+            .then(data => result.innerHTML = JSON.stringify(data))
+    }
+    read_single_video.onclick = () => {
+        fetch('http://localhost:5005/videos/' + read_id.value)
+            .then(res => res.json())
+            .then(data => result.innerHTML = JSON.stringify(data))
+    }
+    create_video.onclick = () => {
+        fetch('http://localhost:5005/videos', {
+            method: 'POST',
+            body: JSON.stringify({title: create_title.value}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(res => res.json())
+            .then(data => result.innerHTML = JSON.stringify(data))
+    }
+    delete_video.onclick = () => {
+        fetch('http://localhost:5005/videos/' + delete_id.value, {
+            method: 'DELETE',
+        })
+    }
+    update_video.onclick = () => {
+        fetch('http://localhost:5005/videos/update/video/'+ update_id.value, {
+            method: 'PUT',
+            body: JSON.stringify({title: update_title.value}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(res => res.json())
+            .then(data => result.innerHTML = JSON.stringify(data))
+    }
+</script>
+</body>
+</html>
+index.html
+index.html. На экране.
