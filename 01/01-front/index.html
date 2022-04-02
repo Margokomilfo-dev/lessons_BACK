@@ -54,7 +54,7 @@
         })
     }
     update_video.onclick = () => {
-        fetch('http://localhost:5005/videos/update/video/'+ update_id.value, {
+        fetch('http://localhost:5005/videos/videos/'+ update_id.value, {
             method: 'PUT',
             body: JSON.stringify({title: update_title.value}),
             headers: {

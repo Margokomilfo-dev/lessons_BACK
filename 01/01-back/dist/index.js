@@ -21,47 +21,67 @@ app.get('/', (req, res) => {
 app.get('/videos', (req, res) => {
     res.send(videos); //res.json = res.send
 });
-app.get('/videos/:id', (req, res) => {
-    const id = +req.params.id;
-    const video = videos.find(v => v.id === id);
-    if (video) { //(!!video)
-        res.send(video); //res.json = res.send
-    }
-    else
-        res.send(404);
-});
 app.post('/videos', (req, res) => {
+    const videosLength = videos.length;
     const newVideo = {
         id: +(new Date()),
         title: req.body.title,
         author: 'it-incubator.eu'
     };
     videos.push(newVideo);
-    res.status(201).send(newVideo);
+    if (videosLength > videos.length) {
+        res.status(201).send(newVideo);
+    }
+    else {
+        res.send(400);
+    }
 });
-app.put('/videos/update/video/:id', (req, res) => {
+app.get('/videos/:id', (req, res) => {
     const id = +req.params.id;
-    //реализация Димыча
-    // const video = videos.find(v=> v.id === id)
-    // if(video){
-    //     video.title = req.body.title
-    //     res.send(videos)
-    // }else res.send(videos)
-    videos = videos.map(v => {
-        if (v.id === id) {
-            return Object.assign(Object.assign({}, v), { title: req.body.title });
+    if (id) {
+        const video = videos.find(v => v.id === id);
+        if (video) { //(!!video)
+            res.send(video); //res.json = res.send
         }
         else
-            return v;
-    });
-    res.send(videos);
+            res.send(404);
+    }
+    else {
+        res.status(500).send('id is required');
+    }
+});
+app.put('/videos/videos/:id', (req, res) => {
+    const id = +req.params.id;
+    const video = videos.find(v => v.id === id);
+    if (id && video) {
+        //реализация Димыча
+        // const video = videos.find(v=> v.id === id)
+        // if(video){
+        //     video.title = req.body.title
+        //     res.send(videos)
+        // }else res.send(videos)
+        videos = videos.map(v => {
+            if (v.id === id) {
+                return Object.assign(Object.assign({}, v), { title: req.body.title });
+            }
+            else
+                return v;
+        });
+        res.status(204).send(videos);
+    }
+    else
+        res.send(404);
 });
 app.delete('/videos/:id', (req, res) => {
     const id = +req.params.id;
-    let newVideos = videos.filter(v => v.id !== id);
-    if (newVideos.length < videos.length) {
-        videos = newVideos;
-        res.send(204);
+    if (id) {
+        let newVideos = videos.filter(v => v.id !== id);
+        if (newVideos.length < videos.length) {
+            videos = newVideos;
+            res.send(204);
+        }
+        else
+            res.send(404);
     }
     else
         res.send(404);
