@@ -8,7 +8,8 @@ app.use(cors())
 app.use(bodyParser.json())
 
 
-const port = 5005
+const port = process.env.PORT || 5005
+
 
 let videos = [
     {id: 1, title: 'About JS - 01', author: 'it-incubator.eu'},
@@ -36,7 +37,16 @@ app.post('/videos', (req: Request, res: Response) => {
     {
         res.status(201).send(newVideo)
     }else {
-        res.send(400)
+        res.status(400).send({
+            "data": {},
+            "errorsMessages": [
+                {
+                    "message": "The Title field is required.",
+                    "field": "title"
+                }
+            ],
+            "resultCode": 1
+        })
     }
 })
 
@@ -49,15 +59,20 @@ app.get('/videos/:id', (req: Request, res: Response ) => {
         }
         else res.send(404)
     }else {
-        res.status(500).send('id is required')
+        res.send(404)
     }
-
 })
 
 app.put('/videos/videos/:id', (req: Request, res: Response ) => {
     const id = +req.params.id
+    function isNumeric(id: any) {
+        return !isNaN(parseFloat(id)) && isFinite(id);
+    }
+    if(!id || !isNumeric(id)){
+       return res.send(400)
+    }
     const video = videos.find(v => v.id === id)
-    if (id && video) {
+    if (video) {
         //реализация Димыча
         // const video = videos.find(v=> v.id === id)
         // if(video){
@@ -70,7 +85,7 @@ app.put('/videos/videos/:id', (req: Request, res: Response ) => {
                 return {...v, title: req.body.title}
             }else return v
         })
-        res.status(204).send(videos)
+        res.sendStatus(204)
     }else res.send(404)
 })
 

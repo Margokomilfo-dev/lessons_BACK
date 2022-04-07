@@ -10,7 +10,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
-const port = 5005;
+const port = process.env.PORT || 5005;
 let videos = [
     { id: 1, title: 'About JS - 01', author: 'it-incubator.eu' },
     { id: 2, title: 'About JS - 02', author: 'it-incubator.eu' },
