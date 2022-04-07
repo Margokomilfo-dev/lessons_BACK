@@ -69,7 +69,7 @@ app.put('/videos/videos/:id', (req: Request, res: Response ) => {
         return !isNaN(parseFloat(id)) && isFinite(id);
     }
     if(!id || !isNumeric(id)){
-       return res.send(400)
+        return res.send(400)
     }
     const video = videos.find(v => v.id === id)
     if (video) {
