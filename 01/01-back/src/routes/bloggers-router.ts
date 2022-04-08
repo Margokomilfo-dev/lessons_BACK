@@ -1,56 +1,26 @@
 import {Request, Response, Router} from 'express'
 import {isNumeric} from '../index'
+import {bloggersRepository} from '../repositories/bloggers-repository'
 
 export const bloggersRouter = Router({})
-export type BloggerType = { id: number, name: string, youtubeUrl: string }
-export let bloggers = [
-    {id: 1, name: 'blogger1', youtubeUrl: 'youtube1.com'},
-    {id: 2, name: 'blogger2', youtubeUrl: 'youtube2.com'},
-    {id: 3, name: 'blogger3', youtubeUrl: 'youtube3.com'}
-]
+
 
 bloggersRouter.get('/', (req: Request, res: Response) => {
+    const bloggers = bloggersRepository.findBloggers(req.query.name?.toString())
     res.status(200).send(bloggers)
 })
 bloggersRouter.post('/', (req: Request, res: Response) => {
-    const bloggerLength = bloggers.length
     const name = req.body.name
     const youtubeUrl = req.body.youtubeUrl
-
-    if (!name || !youtubeUrl) {
-        res.status(400).send({
-            data: {},
-            resultCode: 1,
-            errorsMessages: [{message: 'no res.body', field: 'name or youtubeUrl'}]
-        })
+    const falseParams = checkNameAndUrl(name, youtubeUrl)
+    if(falseParams){
+        res.status(400).send(falseParams)
         return
     }
-    if (youtubeUrl) {
-        const regex = new RegExp('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$')
-        const result = regex.test(youtubeUrl)
-        if (!result) {
-            res.status(400).send({
-                data: {},
-                resultCode: 1,
-                errorsMessages: [
-                    {
-                        message: 'The field YoutubeUrl must match the regular expression \'^https://([a-zA-Z0-9_-]+\\\\.)+[a-zA-Z0-9_-]+(\\\\/[a-zA-Z0-9_-]+)*\\\\/?$\'.',
-                        field: 'youtubeUrl'
-                    }
-                ]
-            })
-            return
-        }
-    }
+    const blogger = bloggersRepository.createBlogger(name, youtubeUrl)
 
-    const newBlogger: BloggerType = {
-        id: +(new Date()),
-        name: req.body.name,
-        youtubeUrl: req.body.youtubeUrl,
-    }
-    bloggers.push(newBlogger)
-    if (bloggerLength < bloggers.length) {
-        res.status(201).send(newBlogger)
+    if (blogger) {
+        res.status(201).send(blogger)
     } else {
         res.status(400).send({
             data: {},
@@ -61,14 +31,14 @@ bloggersRouter.post('/', (req: Request, res: Response) => {
 })
 bloggersRouter.get('/:id', (req: Request, res: Response) => {
     const id = +req.params.id
-    if (!id || !isNumeric(id)) {
+    const trulyId = checkNumId(id)
+    if (!trulyId) {
         res.send(400)
         return
     }
-
-    const blogger = bloggers.find(b => b.id === id)
-    if (blogger) { //(!!video)
-        res.send(blogger)//res.json = res.send
+    const blogger = bloggersRepository.findBloggerById(id)
+    if (blogger) {
+        res.send(blogger)
     } else {
         res.send(404)
     }
@@ -76,25 +46,52 @@ bloggersRouter.get('/:id', (req: Request, res: Response) => {
 })
 bloggersRouter.put('/:id', (req: Request, res: Response) => {
     const id = +req.params.id
-    if (!id || !isNumeric(id)) {
+   const trulyId = checkNumId(id)
+    if (!trulyId) {
         res.send(400)
         return
     }
     const name = req.body.name
     const youtubeUrl = req.body.youtubeUrl
-    if (!name || !youtubeUrl) {
-        res.status(400).send({
+    const falseParams = checkNameAndUrl(name, youtubeUrl)
+    if(falseParams){
+        res.status(400).send(falseParams)
+        return
+    }
+    const isUpdated = bloggersRepository.updateBlogger(id, name, youtubeUrl)
+    if (isUpdated) {
+        res.sendStatus(204)
+    } else res.send(404)
+})
+bloggersRouter.delete('/:id', (req: Request, res: Response) => {
+    const id = +req.params.id
+    const trulyId = checkNumId(id)
+    if (!trulyId) {
+        res.send(400)
+        return
+    }
+    const isDeleted = bloggersRepository.deleteBlogger(id)
+    if (isDeleted) {
+        res.send(204)
+    } else res.send(404)
+})
+
+const checkNumId = (id: any) => {
+    return !(!id || !isNumeric(id));
+}
+const checkNameAndUrl = (name: string, url: string) => {
+    if (!name || !url) {
+      return{
             data: {},
             resultCode: 1,
             errorsMessages: [{message: 'no res.body', field: 'name or youtubeUrl'}]
-        })
-        return
+        }
     }
-    if (youtubeUrl) {
+    if (url) {
         const regex = new RegExp('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$')
-        const result = regex.test(youtubeUrl)
+        const result = regex.test(url)
         if (!result) {
-            res.status(400).send({
+            return {
                 data: {},
                 resultCode: 1,
                 errorsMessages: [
@@ -103,31 +100,8 @@ bloggersRouter.put('/:id', (req: Request, res: Response) => {
                         field: 'youtubeUrl'
                     }
                 ]
-            })
-            return
+            }
         }
     }
-    const blogger = bloggers.find(b => b.id === id)
-    if (blogger) {
-        bloggers = bloggers.map(b => {
-            if (b.id === id) {
-                return {...b, name: req.body.name, youtubeUrl: req.body.youtubeUrl}
-            } else return b
-        })
-        res.sendStatus(204)
-    } else res.send(404)
-})
-bloggersRouter.delete('/:id', (req: Request, res: Response) => {
-    const id = +req.params.id
-    if (!id || !isNumeric(id)) {
-        res.send(400)
-        return
-    }
-    if (id) {
-        let newBloggers = bloggers.filter(b => b.id !== id)
-        if (newBloggers.length < bloggers.length) {
-            bloggers = newBloggers
-            res.send(204)
-        }
-    } else res.send(404)
-})
+    else return false
+}

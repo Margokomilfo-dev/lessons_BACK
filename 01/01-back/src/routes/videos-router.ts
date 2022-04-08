@@ -1,17 +1,15 @@
 import {Request, Response, Router} from 'express'
 import {isNumeric} from '../index'
+import {videosRepository} from '../repositories/videos-repository'
+import {postRepository} from '../repositories/posts-repository'
 
 export const videosRouter = Router({})
-export let videos = [
-    {id: 1, title: 'About JS - 01', author: 'it-incubator.eu'},
-    {id: 2, title: 'About JS - 02', author: 'it-incubator.eu'},
-]
 
 videosRouter.get('/', (req: Request, res: Response) => {
-    res.send(videos) //res.json = res.send
+    const videos = videosRepository.getVideos()
+    res.send(videos)
 })
 videosRouter.post('/', (req: Request, res: Response) => {
-    const videosLength = videos.length
     const title = req.body.title
     if (!title) {
         res.status(400).send({
@@ -21,13 +19,8 @@ videosRouter.post('/', (req: Request, res: Response) => {
         })
         return
     }
-    const newVideo = {
-        id: +(new Date()),
-        title: req.body.title,
-        author: 'it-incubator.eu'
-    }
-    videos.push(newVideo)
-    if (videosLength > videos.length) {
+    const newVideo = videosRepository.createVideo(title)
+    if (newVideo) {
         res.status(201).send(newVideo)
     } else {
         res.status(400).send({
@@ -39,11 +32,13 @@ videosRouter.post('/', (req: Request, res: Response) => {
 })
 videosRouter.get('/:id', (req: Request, res: Response) => {
     const id = +req.params.id
-    if (id) {
-        const video = videos.find(v => v.id === id)
-        if (video) { //(!!video)
-            res.send(video)//res.json = res.send
-        } else res.send(404)
+    if (!id || !isNumeric(id)) {
+        res.send(404)
+        return
+    }
+    const video = videosRepository.getVideoById(id)
+    if (video) {
+        res.send(video)
     } else {
         res.send(404)
     }
@@ -59,20 +54,8 @@ videosRouter.put('/:id', (req: Request, res: Response) => {
         res.send(400)
         return
     }
-    const video = videos.find(v => v.id === id)
-    if (video) {
-        //реализация Димыча
-        // const video = videos.find(v=> v.id === id)
-        // if(video){
-        //     video.title = req.body.title
-        //     res.send(videos)
-        // }else res.send(videos)
-
-        videos = videos.map(v => {
-            if (v.id === id) {
-                return {...v, title: req.body.title}
-            } else return v
-        })
+    const isUpdated = videosRepository.updateVideo(id, title)
+    if (isUpdated) {
         res.sendStatus(204)
     } else res.send(404)
 })
@@ -82,14 +65,10 @@ videosRouter.delete('/:id', (req: Request, res: Response) => {
         res.send(404)
         return
     }
-
-    let newVideos = videos.filter(v => v.id !== id)
-    if (newVideos.length < videos.length) {
-        videos = newVideos
+    const isDeleted = postRepository.deletePost(id)
+    if (isDeleted) {
         res.send(204)
-        return
     } else {
         res.send(404)
-        return
     }
 })
