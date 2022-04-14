@@ -1,0 +1,9 @@
+.idea
+node_modules
+dist
+01/01-back/dist/
+01/01-back/node_modules/
+01/01-back/.idea/
+03/dist/
+03/node_modules/
+03/.idea/
